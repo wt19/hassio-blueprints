@@ -7,24 +7,28 @@ blueprint:
   input:
     calendar_entity:
       name: Birthday Calendar
-      description: "Select the calendar entity that holds birthday events."
+      description: >
+        Select the calendar entity that holds birthday events.
       selector:
         entity:
           domain: calendar
     notify_target:
       name: Notify Target
-      description: "Service to send the notification (e.g., notify.notify or a mobile app)."
+      description: >
+        Service to send the notification, e.g., notify.notify or a mobile app service.
       selector:
         service:
     reminder_time:
       name: Reminder Time
-      description: "When to send the reminder (default: 18:00:00 = 6 PM)."
+      description: >
+        Time to send the reminder. Default is 18:00:00 (6 PM).
       default: "18:00:00"
       selector:
         time:
     days_before:
       name: Days Before
-      description: "How many days in advance to send the reminder. Default: 7."
+      description: >
+        How many days in advance to send the reminder. Default is 7.
       default: 7
       selector:
         number:
@@ -38,7 +42,9 @@ blueprint:
         text:
     message_body:
       name: Message Body Template
-      description: "Template to format the body. {{ names }} will be replaced with a list of names."
+      description: >
+        Template for the body of the message. 
+        {{ names }} will be replaced with a list of names.
       default: |
         In one week, the following people have a birthday:
         {% for name in names %}
