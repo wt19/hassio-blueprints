@@ -1,0 +1,80 @@
+blueprint:
+  name: Birthday Reminder (1 Week Before)
+  description: |
+    Sends a reminder about upcoming birthdays 1 week in advance at 6 PM.
+    If multiple birthdays are on the same day, it lists all of them.
+  domain: automation
+  input:
+    calendar_entity:
+      name: Birthday Calendar
+      description: Select the calendar entity that holds birthday events.
+      selector:
+        entity:
+          domain: calendar
+    notify_target:
+      name: Notify Target
+      description: Service to send the notification (e.g., notify.notify or a mobile app).
+      selector:
+        service:
+    reminder_time:
+      name: Reminder Time
+      description: When to send the reminder (default: 18:00:00 = 6 PM)
+      default: "18:00:00"
+      selector:
+        time:
+    days_before:
+      name: Days Before
+      description: How many days in advance to send the reminder. Default: 7.
+      default: 7
+      selector:
+        number:
+          min: 1
+          max: 30
+          mode: slider
+    message_title:
+      name: Notification Title
+      default: "🎂 Upcoming Birthdays!"
+      selector:
+        text:
+    message_body:
+      name: Message Body Template
+      description: Template to format the body ({{ names }} is the list of birthday people).
+      default: |
+        In one week, the following people have a birthday:
+        {% for name in names %}
+        🎉 {{ name }}
+        {% endfor %}
+      selector:
+        text:
+
+trigger:
+  - platform: time
+    at: !input reminder_time
+
+condition: []
+
+action:
+  - variables:
+      target_date: "{{ (now().date() + timedelta(days=(days_before | int))) }}"
+      events_today: >
+        {% set start = target_date %}
+        {% set end = target_date %}
+        {% set birthdays = state_attr(calendar_entity, 'events') %}
+        {% if birthdays %}
+          {{ birthdays | selectattr('start_time', 'defined') | selectattr('start_time', 'search', start.strftime('%Y-%m-%d')) | list }}
+        {% else %}
+          []
+        {% endif %}
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ events_today | count > 0 }}"
+        sequence:
+          - service: !input notify_target
+            data:
+              title: !input message_title
+              message: >
+                {% set names = events_today | map(attribute='summary') | list %}
+                {{ message_body }}
+
+mode: single
